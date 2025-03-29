@@ -46,6 +46,13 @@ source setup_env.sh
 
 ![Detection Example](doc/images/detection.gif)
 
+#### exécuter comptage_personne
+Ce code est une évolutions de Basic Pipelines. Il le reprend mais en ajoutant un fichier csv qui permet un heurodatage de l'entrée et de la sortie d'une personne
+```bash
+python basic_pipelines/comptage_personne6.py --input rpi
+```
+Le code utilise la camera pour une détection en direct
+
 #### Run the simple detection example:
 ```bash
 python basic_pipelines/detection_simple.py
@@ -185,14 +192,6 @@ For examples, tutorials, and retrain instructions, see the [Hailo Model Zoo Repo
 Additional documentation and [tutorials](https://hailo.ai/developer-zone/documentation/dataflow-compiler/latest/?sp_referrer=tutorials/tutorials.html) can be found in the [Hailo Developer Zone Documentation](https://hailo.ai/developer-zone/documentation/).
 For a full end-to-end training and deployment example, see the [Retraining Example](doc/retraining-example.md).
 The detection basic pipeline example includes support for retrained models. For more information, see [Using Retrained Models](doc/basic-pipelines.md#using-retrained-models).
-
-# Hailo RPi5 comptage_personne
-Ce code est une évolutions de Basic Pipelines. Il le reprend mais en ajoutant un fichier csv qui permet un heurodatage de l'entrée et de la sortie d'une personne
-```bash
-cd Documents/hailo-rpi5-examples/
-source setup_env.sh
-python basic_pipelines/comptage_personne6.py --input rpi
-```
 
 ## Contributing
 
