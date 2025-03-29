@@ -186,6 +186,14 @@ Additional documentation and [tutorials](https://hailo.ai/developer-zone/documen
 For a full end-to-end training and deployment example, see the [Retraining Example](doc/retraining-example.md).
 The detection basic pipeline example includes support for retrained models. For more information, see [Using Retrained Models](doc/basic-pipelines.md#using-retrained-models).
 
+# Hailo RPi5 comptage_personne
+Ce code est une évolutions de Basic Pipelines. Il le reprend mais en ajoutant un fichier csv qui permet un heurodatage de l'entrée et de la sortie d'une personne
+```bash
+cd Documents/hailo-rpi5-examples/
+source setup_env.sh
+python basic_pipelines/comptage_personne6.py --input rpi
+```
+
 ## Contributing
 
 We welcome contributions from the community. You can contribute by:
