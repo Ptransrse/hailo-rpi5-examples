@@ -7,6 +7,9 @@ import cv2
 import hailo
 import csv
 from datetime import datetime
+import shutil
+import time
+import threading
 
 from hailo_apps_infra.hailo_rpi_common import (
     get_caps_from_pad,
@@ -23,16 +26,41 @@ class user_app_callback_class(app_callback_class):
         super().__init__()
         self.new_variable = 42  # New variable example
         self.detected_people = {}  # Track detected people (by track ID)
-        self.csv_file_path = "detections.csv"
-        
+        self.csv_file_path = "temp.csv"
+        self.default_detection_path = "detection.csv"
+        self.usb_dir = "/media/ptrans/USB DISK/csv"
+        self.detection_file_path = self.get_detection_file_path()
+
         # Supprimer le fichier CSV existant s'il y en a un
         if os.path.exists(self.csv_file_path):
             os.remove(self.csv_file_path)
-        
+
         # Créer le fichier CSV et écrire les en-têtes
         with open(self.csv_file_path, mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Track ID", "Start Time", "End Time"])
+
+        # Créer ou nettoyer le fichier detection.csv
+        if os.path.exists(self.detection_file_path):
+            os.remove(self.detection_file_path)
+
+        # Créer le fichier detection.csv avec les en-têtes
+        with open(self.detection_file_path, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Track ID", "Start Time", "End Time"])
+
+        # Start a thread that will check and copy temp.csv to detection.csv every minute
+        self.copy_thread = threading.Thread(target=self.copy_csv_periodically)
+        self.copy_thread.daemon = True  # Makes sure the thread exits when the program exits
+        self.copy_thread.start()
+
+    def get_detection_file_path(self):
+        """Return USB path if available, otherwise default."""
+        if os.path.isdir(self.usb_dir):
+            os.makedirs(self.usb_dir, exist_ok=True)
+            return os.path.join(self.usb_dir, "detection.csv")
+        else:
+            return self.default_detection_path
 
     def new_function(self):
         return "The meaning of life is: "
@@ -55,13 +83,24 @@ class user_app_callback_class(app_callback_class):
         return self.detected_people
 
     def remove_inactive_people(self, active_ids):
-        """ Remove people from the dictionary who are no longer detected. """
+        """Remove people from the dictionary who are no longer detected."""
         ids_to_remove = [track_id for track_id in self.detected_people if track_id not in active_ids]
         for track_id in ids_to_remove:
-            end_time = datetime.now().strftime("%H:%M:%S")
+            end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.update_detection_end_time(track_id, end_time)
             del self.detected_people[track_id]
 
+    def copy_csv_periodically(self):
+        """Periodically copy the temp.csv to detection.csv every minute."""
+        while True:
+            time.sleep(60)  # Wait for 1 minute
+            if os.path.exists(self.csv_file_path):
+                try:
+                    self.detection_file_path = self.get_detection_file_path()
+                    shutil.copy(self.csv_file_path, self.detection_file_path)
+                    print(f"Copied {self.csv_file_path} to {self.detection_file_path}.")
+                except Exception as e:
+                    print(f"Failed to copy CSV: {e}")
 
 # -----------------------------------------------------------------------------------------------
 # User-defined callback function
@@ -93,7 +132,7 @@ def app_callback(pad, info, user_data):
     
     # Parse the detections
     detection_count = 0
-    current_time = datetime.now().strftime("%H:%M:%S")  # Current time for display
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     for detection in detections:
         label = detection.get_label()
         bbox = detection.get_bbox()
@@ -108,11 +147,9 @@ def app_callback(pad, info, user_data):
             string_to_print += (f"Detection: ID: {track_id} Label: {label} Confidence: {confidence:.2f}\n")
             detection_count += 1
 
-            # If the person is detected for the first time, record the start time
             if track_id not in user_data.get_detected_people():
                 user_data.add_detection(track_id, current_time)
 
-            # Keep track of active ids
             active_ids.append(track_id)
     
     # Update the end times for people who are no longer detected
@@ -127,7 +164,9 @@ def app_callback(pad, info, user_data):
     print(string_to_print)
     return Gst.PadProbeReturn.OK
 
-
+# -----------------------------------------------------------------------------------------------
+# Main
+# -----------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     user_data = user_app_callback_class()
     app = GStreamerDetectionApp(app_callback, user_data)
