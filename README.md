@@ -21,7 +21,7 @@ See our Developement Guide for more information on how to use the pipelines to c
 
 ### Clone the Repository
 ```bash
-git clone https://github.com/hailo-ai/hailo-rpi5-examples.git
+git clone https://github.com/Ptransrse/hailo-rpi5-examples.git
 ```
 Navigate to the repository directory:
 ```bash
@@ -49,7 +49,7 @@ source setup_env.sh
 #### exécuter comptage_personne
 Ce code est une évolutions de Basic Pipelines. Il le reprend mais en ajoutant un fichier csv qui permet un heurodatage de l'entrée et de la sortie d'une personne
 ```bash
-python basic_pipelines/comptage_personne6.py --input rpi
+python basic_pipelines/comptage_personne.py --input rpi
 ```
 Le code utilise la camera pour une détection en direct
 
